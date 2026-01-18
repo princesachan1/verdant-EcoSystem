@@ -3,15 +3,6 @@
 // ============================================================================
 // LOGISTICS MODULE: ROUTE OPTIMIZATION (2-OPT TSP)
 // ============================================================================
-// Implements 2-Opt algorithm for solving Traveling Salesman Problem
-// Used for optimizing delivery routes to minimize distance
-//
-// Author: Logistics Team
-// Created: Dec 2025
-// Last Modified: Jan 2026
-// Performance: ~3-5 iterations for 10 stops, ~10-15 for 50 stops
-// TODO: Try 3-opt for even better results (but might be slower)
-// FIXME: Random seed makes routes non-deterministic - good or bad?
 
 #define PI 3.14159265358979323846
 #define MIN_STOPS 2
@@ -26,13 +17,6 @@ typedef struct {
     char type[10]; // "HUB" or "DROP"
 } DeliveryNode;
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Calculate Euclidean distance between two delivery nodes
- */
 static inline double calculate_distance(const DeliveryNode* a, const DeliveryNode* b) {
     double dx = a->x - b->x;
     double dy = a->y - b->y;

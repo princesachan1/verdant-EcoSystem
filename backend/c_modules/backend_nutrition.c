@@ -4,13 +4,6 @@
 // NUTRITION MODULE: BIO-METRIC SCORING & DAILY AUDITS
 // ============================================================================
 // Implements nutrition analysis and daily goal tracking with penalties
-//
-// Author: Health Team
-// Created: Dec 2025
-// Last Modified: Jan 2026
-// Note: Scoring weights based on WHO dietary guidelines
-// TODO: Add micronutrient analysis (vitamins, minerals)
-// TODO: Consider user age/weight for personalized scoring
 
 #define MIN_SCORE 0.0
 #define MAX_SCORE 100.0

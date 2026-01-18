@@ -1,8 +1,3 @@
-#!/bin/bash
-
-# Build script for Major Project C Backend
-# Compiles all C modules into a shared library (DLL/SO)
-
 echo "=== Major Project Backend Build ==="
 echo ""
 

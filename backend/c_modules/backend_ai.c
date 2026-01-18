@@ -1,25 +1,9 @@
 #include "backend_types.h"
 
-// ============================================================================
-// AI MODULE: CUSTOMER SEGMENTATION & CLUSTERING
-// ============================================================================
-// Implements 4-tier K-Means clustering for customer segmentation
-// Clusters: Titanium, Gold, Silver, Bronze based on eco-points and spending
-//
-// Author: Backend Team
-// Created: Dec 2025
-// Last Modified: Jan 2026
-// TODO: Experiment with different K values (maybe 5 clusters?)
-// TODO: Add silhouette score calculation for cluster quality
-
 #define NUM_CLUSTERS 4
 #define MAX_ITERATIONS 50
 #define CONVERGENCE_THRESHOLD 0.01
 
-// Strategic centroids for business-driven segmentation
-// X-axis: Green Points (Eco-consciousness)
-// Y-axis: Wallet Balance (Spending power)
-// Note: These initial values were chosen based on our user data analysis
 static float centroids[NUM_CLUSTERS][2] = {
     {30.0, 30.0},      // Bronze: Low Eco, Low Spend (casual users)
     {150.0, 30.0},     // Silver: High Eco, Low Spend (eco-warriors on budget)
@@ -31,23 +15,12 @@ static const char* cluster_names[NUM_CLUSTERS] = {
     "Bronze", "Silver", "Gold", "Titanium"
 };
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Calculate Euclidean distance between two points
- */
 static inline float euclidean_distance(float x1, float y1, float x2, float y2) {
     float dx = x1 - x2;
     float dy = y1 - y2;
     return sqrtf(dx * dx + dy * dy);
 }
 
-/**
- * Calculate churn risk based on spending patterns
- * Returns risk percentage (0-100)
- */
 static float calculate_churn_risk(int wallet_balance) {
     if (wallet_balance < 50) return 85.0f;
     if (wallet_balance < 200) return 55.0f;
@@ -55,10 +28,6 @@ static float calculate_churn_risk(int wallet_balance) {
     return 5.0f;
 }
 
-/**
- * Assign each data point to nearest centroid
- * Returns 1 if any assignment changed, 0 otherwise
- */
 static int assign_clusters(int count, const int* points, const int* wallets, 
                            int* assignments) {
     int changed = 0;
@@ -90,10 +59,7 @@ static int assign_clusters(int count, const int* points, const int* wallets,
     return changed;
 }
 
-/**
- * Update centroids based on current cluster assignments
- * Returns maximum centroid movement
- */
+
 static float update_centroids(int count, const int* points, const int* wallets,
                               const int* assignments) {
     float new_centroids[NUM_CLUSTERS][2] = {{0}};
@@ -133,9 +99,6 @@ static float update_centroids(int count, const int* points, const int* wallets,
     return max_movement;
 }
 
-// ============================================================================
-// EXPORTED FUNCTION
-// ============================================================================
 
 /**
  * Perform K-Means clustering on customer data

@@ -97,8 +97,8 @@ A full-stack food delivery platform featuring advanced AI analytics, real-time i
 
 ```bash
 # 1. Clone repository
-git clone <repository-url>
-cd MajorProject
+git clone https://github.com/princesachan1/verdant-EcoSystem
+cd verdant_EcoSystem
 
 # 2. Start all services
 docker-compose up -d --build
@@ -514,10 +514,3 @@ MIT License - See LICENSE file for details
 - PostgreSQL for robust database
 - Docker for containerization
 - All open-source contributors
-
----
-
-**Version**: 2.0  
-**Last Updated**: January 2026  
-**Status**: Production Ready ✅  
-**AI Engine**: C-powered for maximum performance 🚀

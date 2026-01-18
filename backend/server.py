@@ -27,25 +27,30 @@ print(f"[INFO] Server working directory: {base_dir}")
 lib_file = "verdant_backend.dll" if sys.platform.startswith('win') else "verdant_backend.so"
 lib_path = os.path.join(base_dir, lib_file)
 
+lib = None
 if not os.path.exists(lib_path):
-    print(f"[ERROR] C library not found: {lib_file}")
+    print(f"[WARNING] C library not found: {lib_file}")
+    print("[INFO] Server will start but AI features will be disabled")
     print("[FIX] Rebuild with: docker-compose up -d --build backend")
-    sys.exit(1)
+else:
+    try:
+        lib = ctypes.CDLL(lib_path)
+        print(f"[SUCCESS] C library loaded: {lib_file}")
+    except OSError as e:
+        print(f"[WARNING] Error loading C library: {e}")
+        print("[INFO] Server will start but AI features will be disabled")
 
-try:
-    lib = ctypes.CDLL(lib_path)
-except OSError as e:
-    print(f"Error loading DLL: {e}")
-    sys.exit(1)
 
 # C Function bindings
 # These are the performance-critical functions we moved to C
 # Everything else uses Python for easier maintenance
 # TODO: Consider adding caching layer for frequently called functions
 
-lib.optimize_route.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
-lib.analyze_nutrition.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
-lib.calculate_daily_audit.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+if lib:
+    lib.optimize_route.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+    lib.analyze_nutrition.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+    lib.calculate_daily_audit.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+
 
 # --- FLASK APP SETUP ---
 UPLOAD_FOLDER = os.path.join(base_dir, 'static/uploads')
@@ -172,6 +177,8 @@ def restock():
 @app.route('/api/route', methods=['GET'])
 def get_route():
     """Get optimized delivery route using 2-Opt algorithm"""
+    if not lib:
+        return jsonify({"error": "AI engine not available", "stops": [], "total_distance": 0}), 503
     try:
         stops = int(request.args.get('stops', 12))
         buffer = ctypes.create_string_buffer(8192)
@@ -183,6 +190,8 @@ def get_route():
 @app.route('/api/nutrition', methods=['POST'])
 def analyze_nutrition():
     """Analyze nutrition data and provide bio-score"""
+    if not lib:
+        return jsonify({"verdict": "AI Unavailable", "bio_score": 50}), 503
     try:
         data = request.json
         buffer = ctypes.create_string_buffer(2048)
@@ -201,6 +210,8 @@ def analyze_nutrition():
 @app.route('/api/audit', methods=['POST'])
 def daily_audit():
     """Calculate daily habit audit and point penalties"""
+    if not lib:
+        return jsonify({"penalty_applied": false, "new_points": 0}), 503
     try:
         data = request.json
         buffer = ctypes.create_string_buffer(1024)
@@ -231,7 +242,7 @@ def get_user():
         today_str = date.today().isoformat()
         penalty_msg = None
         
-        if user['last_active_date'] and user['last_active_date'].isoformat() != today_str:
+        if lib and user['last_active_date'] and user['last_active_date'].isoformat() != today_str:
             buffer = ctypes.create_string_buffer(1024)
             lib.calculate_daily_audit(
                 user['green_points'],
@@ -771,11 +782,14 @@ def forecast():
         return jsonify([])
 
 # Binding for new Clustering AI
-lib.perform_clustering.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, ctypes.c_int]
+if lib:
+    lib.perform_clustering.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, ctypes.c_int]
 
 @app.route('/api/matrix')
 def matrix():
     """Return customer clustering data using C-based K-Means on real DB data"""
+    if not lib:
+        return jsonify([]), 503
     try:
         # 1. Fetch real user data from Database
         users = db.get_all_users()
@@ -790,18 +804,6 @@ def matrix():
         
         for i, user in enumerate(users):
             points_array[i] = int(user['green_points'])
-            # We need total_orders; get_all_users might not return it effectively if we removed it?
-            # Let's check get_all_users again. 
-            # It returns 'total_orders' is REMOVED from get_all_users earlier to fix crash.
-            # We need to re-add calculation or use a different query.
-            # For efficiency/accuracy, we'll use 0 or fetch fresh count if needed.
-            # Actually, let's use a quick query or assume 0 if not available for safety first.
-            # Ideally: db should provide this. Let's rely on what we have or count orders.
-            # user dict has keys from database.py get_all_users: id, name... 
-            # It DOES NOT have total_orders now.
-            # We will use 'wallet' as a proxy for Y-axis or just 0, OR fix get_all_users.
-            # Let's use 'wallet' (buying power) vs 'green_points' (eco score) for clustering.
-            # That makes sense: Eco-Warrior (High Points) vs Whale (High Wallet).
             orders_array[i] = int(user['wallet']) 
 
         # 3. Call C AI Engine

@@ -11,7 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, ScatterChart, Scatter, ZAxis, PieChart, Pie, LineChart, Line, Legend, ComposedChart, CartesianGrid
 } from 'recharts';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://verdant-ecosystem.onrender.com/api";
 const USER_ID = "user_1";
 const ORDER_STATUSES = ["Placed", "Preparing", "Out for Delivery", "Delivered"];
 const CATEGORY_COLORS = { "Vegan": "#10b981", "High-Protein": "#f59e0b", "Balanced": "#6366f1", "Superfood": "#ec4899", "Seafood": "#0ea5e9", "Main Course": "#10b981", "Fast Food": "#f59e0b", "Italian": "#6366f1", "Japanese": "#ec4899", "Chinese": "#0ea5e9", "Drinks": "#8b5cf6", "Dessert": "#f43f5e", "Healthy": "#84cc16", "Breakfast": "#eab308", "South Indian": "#d946ef", "Breads": "#a855f7", "Soups": "#14b8a6", "Starter": "#f97316" };

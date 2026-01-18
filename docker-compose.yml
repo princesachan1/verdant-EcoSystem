@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: verdant-postgres
+    environment:
+      POSTGRES_DB: verdant_db
+      POSTGRES_USER: verdant_user
+      POSTGRES_PASSWORD: verdant_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - verdant-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdant_user -d verdant_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: verdant-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=verdant_db
+      - DB_USER=verdant_user
+      - DB_PASSWORD=verdant_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - verdant-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: verdant-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - verdant-network
+
+networks:
+  verdant-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
